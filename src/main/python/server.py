@@ -37,7 +37,6 @@ class Server:
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen(5)  # Increased the number of connections in the queue
         load_logger()
-        threading.Thread(target=self.print_scheduler).start()
 
         # Execute self.repository.all_files() in the background every 10 seconds
 
@@ -47,20 +46,8 @@ class Server:
             # Handle communication with the client in a separate thread
             threading.Thread(target=self.handle_client, args=(client_socket,)).start()
 
-    def print_scheduler(self) -> None:
-        """
-        Print "hello" every second.
-        """
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
 
-    def execute_non_blocking(self, func: Callable) -> None:
-        """
-        Execute a function in a separate thread.
-        """
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            executor.submit(func)
+
 
     def handle_client(self, client_socket: socket) -> None:
         """
