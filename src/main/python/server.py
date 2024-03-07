@@ -17,7 +17,7 @@ class Server:
     number of messages it has received and returns that count in its response.
     """
 
-    def __init__(self, host: str, port: int, user: str, password: str) -> None:
+    def __init__(self, host: str, port: int) -> None:
         """
         Initialize the server with the specified host and port.
 
