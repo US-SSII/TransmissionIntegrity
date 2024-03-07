@@ -1,4 +1,5 @@
 import concurrent.futures
+import json
 import os
 import socket
 import threading
@@ -7,7 +8,9 @@ from typing import Callable
 
 import select
 
+from src.main.python.integrity_verifier import validate_message
 from src.main.python.logger import load_logger
+from src.main.python.nonce import NonceManager
 
 
 class Server:
@@ -45,9 +48,6 @@ class Server:
 
             # Handle communication with the client in a separate thread
             threading.Thread(target=self.handle_client, args=(client_socket,)).start()
-
-
-
 
     def handle_client(self, client_socket: socket) -> None:
         """
@@ -105,6 +105,17 @@ class Server:
         Returns:
             str: The response message.
         """
-        # TODO: Modify this function to perform actions based on the received message
-        message = f"Received message: {received_message}"
+
+        nonce_manager = NonceManager("../resources/nonces.json")
+
+        message_dict = json.loads(received_message)
+
+        if validate_message(message_dict["message"], message_dict["nonce"], message_dict["date"], message_dict["mac"]):
+            if nonce_manager.not_repeated(message_dict["nonce"]):
+                message = f"Received message: {received_message}"
+            else:
+                message = "Nonce Repeated"
+        else:
+            message = "Integrity Failed"
+
         return message

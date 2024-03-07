@@ -38,6 +38,7 @@ def create_message():
 
     message_dict["nonce"]=nonce
     message_dict["mac"] = hashing_hmac
+    message_dict["date"] = datetime.now()
     message_json = json.dumps(message_dict, ensure_ascii=False)
 
     return message_json
