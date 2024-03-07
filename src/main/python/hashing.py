@@ -17,12 +17,12 @@ def select_hash_algorithm(day: int) -> str:
 
 
 
-def get_hash(name: str, nonce: str, date_today: datetime) -> str:
+def get_hash(json_str: str, nonce: str, date_today: datetime) -> str:
     """
     Calculates the hash of a file using different algorithms and applies a Message Authentication Code (MAC).
 
     Args:
-        name (str): The name or path of the file.
+        json_str (str): The name or path of the file.
         date_today (datetime): The current date.
 
     Returns:
@@ -33,16 +33,16 @@ def get_hash(name: str, nonce: str, date_today: datetime) -> str:
     # Read the token from the configuration file
     config = ConfigParser()
     config.read("config.ini")
-    token = config.get("HASHING", "token")
+    token = config.get("HASHING", "key")
 
     # Calculate the MAC using the hash and token
     calculated_mac = hashlib.new(select_hash_algorithm(day))
 
     if day % 3 == 0:
-        calculated_mac.update((token + name + nonce).encode())
+        calculated_mac.update((token + json_str + nonce).encode())
     elif day % 3 == 1:
-        calculated_mac.update((name + token + nonce).encode())
+        calculated_mac.update((json_str + token + nonce).encode())
     else:
-        calculated_mac.update((nonce + name + token).encode())
+        calculated_mac.update((nonce + json_str + token).encode())
 
     return calculated_mac.hexdigest()
