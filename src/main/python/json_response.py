@@ -1,12 +1,17 @@
+import json
+
+
 class JSONResponse:
     def __init__(self, status):
         self.status = status
 
     def to_dict(self):
-        return {'origin_account': self.origin_account, 'reciever_account': self.reciever_account, 'amount': self.amount}
+        return {'status': self.status}
 
 
-def create_response(message:str):
-    #status = check_integrity
+def create_response(server_response:str):
+    response = JSONResponse(server_response)
+    response_dict = response.to_dict()
+    response_json = json.dumps(response_dict, ensure_ascii=False)
 
-    return message_json
+    return response_json
