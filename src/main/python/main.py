@@ -1,7 +1,6 @@
 import threading
 from configparser import ConfigParser
 
-from interface import InterfaceHIDS
 from server import Server
 
 if __name__ == '__main__':
@@ -19,8 +18,6 @@ if __name__ == '__main__':
     server = Server(host, int(port), user, password)
     server_thread = threading.Thread(target=server.start)
     server_thread.start()
-
-    interface = InterfaceHIDS(host, int(port))
 
     server_thread.join()
 

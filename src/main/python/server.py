@@ -5,12 +5,9 @@ import threading
 import time
 from typing import Callable
 
-import schedule
 import select
 
 from src.main.python.logger import load_logger
-from src.main.python.monthly_report import compile_monthly_report_by_day
-from src.main.python.repository import Repository
 
 
 class Server:
@@ -31,9 +28,6 @@ class Server:
         self.host = host
         self.port = port
         self.server_socket = None
-        self.repository = Repository(user, password)
-        self.repository.delete_all()
-        self.repository.load_data()
 
     def start(self) -> None:
         """
@@ -46,8 +40,6 @@ class Server:
         threading.Thread(target=self.print_scheduler).start()
 
         # Execute self.repository.all_files() in the background every 10 seconds
-        schedule.every(1).days.do(lambda: self.execute_non_blocking(self.repository.all_files))
-        schedule.every(30).days.do(lambda: self.execute_non_blocking(compile_monthly_report_by_day))
 
         while True:
             client_socket, _ = self.server_socket.accept()  # Accept incoming connection
@@ -119,28 +111,6 @@ class Server:
         Returns:
             str: The response message.
         """
-        if received_message.startswith("all_files"):
-            message = "|".join([file for _, _, aux_files in os.walk(
-                "../../../../../installers/SecureStorage-HIDS-main/SecureStorage-HIDS-main/src/main/resources") for file in aux_files if "." in file])
-        elif received_message.startswith("all_logs"):
-            message = "|".join(os.listdir(
-                "../../../../../installers/SecureStorage-HIDS-main/SecureStorage-HIDS-main/src/main/logs"))
-        elif received_message.startswith("all_reports"):
-            message = "|".join(os.listdir(
-                "../../../../../installers/SecureStorage-HIDS-main/SecureStorage-HIDS-main/src/main/reports"))
-        elif received_message.startswith("file"):
-            file = received_message[5:]
-            message = str(self.repository.one_file(file))
-        elif received_message.startswith("log"):
-            file = received_message[4:]
-            path_element = os.path.join(
-                "../../../../../installers/SecureStorage-HIDS-main/SecureStorage-HIDS-main/src/main/logs", file)
-            with open(path_element, 'r', encoding='utf-8') as file:
-                message = file.read()
-        elif received_message.startswith("report"):
-            file = received_message[7:]
-            path_element = os.path.join(
-                "../../../../../installers/SecureStorage-HIDS-main/SecureStorage-HIDS-main/src/main/reports", file)
-            with open(path_element, 'r', encoding='utf-8') as file:
-                message = file.read()
+        # TODO: Modify this function to perform actions based on the received message
+        message = f"Received message: {received_message}"
         return message
