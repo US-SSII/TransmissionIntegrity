@@ -90,7 +90,14 @@ class Server:
 
     def actions(self, received_message: str) -> str:
         """
-        Process incoming messages and perform corresponding actions.
+        - Guardar el nonce
+        - Llamar a verificador integridad
+            - str ("Integrity Failed")
+        - Llamar a verificador nonce
+            - str ("Nonce repeated")
+        - Sin fallos
+            str ("OK")
+        - Mandar respuesta
 
         Args:
             received_message (str): The received message.
