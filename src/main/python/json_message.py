@@ -1,45 +1,86 @@
-import hashlib
-import hmac
 import json
-from configparser import ConfigParser
 from datetime import datetime
 
-from src.main.python.hashing import get_hash
+from src.main.python.hashing import calculate_mac
 from src.main.python.nonce import NonceManager
 
 
 class JSONMessage:
-    def __init__(self, origin_account, reciever_account, amount):
+    def __init__(self, origin_account: str, receiver_account: str, amount: str) -> None:
+        """
+        Initializes a JSONMessage object.
+
+        Args:
+            origin_account (str): The source account.
+            receiver_account (str): The receiver account.
+            amount (str): The amount in the message.
+        """
         self.origin_account = origin_account
-        self.reciever_account = reciever_account
+        self.receiver_account = receiver_account
         self.amount = amount
+        self.nonce_manager = NonceManager("../resources/nonces.json")
+        self.date: datetime = self.get_current_date()
+        self.mac: str = None
 
-    def to_dict(self):
-        return {'origin_account': self.origin_account, 'reciever_account': self.reciever_account, 'amount': self.amount}
+    def to_dict(self) -> dict:
+        """
+        Converts the JSONMessage object to a dictionary.
 
-def create_message():
-    '''
-    :input: Cuenta origen, Cuenta destino, Cantidad
-    :return: JSON, Resumen MAC
+        Returns:
+            dict: The dictionary representation of the JSONMessage.
+        """
+        nonce = self.nonce_manager.generate()
+        return {
+            'origin_account': self.origin_account,
+            'receiver_account': self.receiver_account,
+            'amount': self.amount,
+            'nonce': nonce,
+            'date': self.date,
+            'mac': self.calculate_mac(nonce)
+        }
 
-    Debe hacer el resumen MAC tomando el JSON, KEY y aplicando Nounce
-    '''
-    nonce_manager=NonceManager("../resources/nonces.json")
-    origin_account = input("Origen: ")
-    reciever_account = input("Destino: ")
-    amount = input("Cantidad: ")
+    def to_json(self) -> str:
+        """
+        Converts the JSONMessage object to a JSON-formatted string.
 
-    message = JSONMessage(origin_account, reciever_account, amount)
-    message_dict = message.to_dict()
-    json_str= str(message_dict)
+        Returns:
+            str: The JSON-formatted string.
+        """
+        return json.dumps(self.to_dict(), ensure_ascii=False)
 
-    nonce= nonce_manager.generate()
-    hashing_hmac = get_hash(json_str, nonce, datetime.now())
+    def get_current_date(self) -> datetime:
+        """
+        Gets the current date and time.
 
-    message_dict["nonce"]=nonce
-    message_dict["mac"] = hashing_hmac
-    message_dict["date"] = datetime.now()
-    message_json = json.dumps(message_dict, ensure_ascii=False)
+        Returns:
+            datetime: The current date and time.
+        """
+        if not self.date:
+            self.date = datetime.now()
+        return self.date
 
-    return message_json
+    def calculate_mac(self, nonce: str) -> str:
+        """
+        Calculates the Message Authentication Code (MAC) for the JSONMessage.
 
+        Args:
+            nonce (str): The nonce value for the calculation.
+
+        Returns:
+            str: The MAC value.
+        """
+        if not self.mac:
+            json_str = json.dumps(self.to_dict(), ensure_ascii=False)
+            self.mac = calculate_mac(json_str, nonce, self.date)
+        return self.mac
+
+
+def create_message() -> str:
+    """
+    Creates a JSON message with a MAC summary.
+
+    Returns:
+        str: JSON message with MAC summary.
+    """
+    message = JSONMessage(input("Source account: "), input("Receiver account: "), input("Amount: "))
+    return message.to_json()

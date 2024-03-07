@@ -9,24 +9,25 @@ class MaliciousClient(Client):
     The MaliciousClient class extends the Client class and overrides the send_message method to send a malicious message.
     """
 
-    def send_message(self, message, keys):
+    def send_message(self, message: str, keys: list) -> None:
         """
         Sends a malicious message to the connected server.
 
         Args:
             message (str): The message to be sent.
+            keys (list): The list of keys to alter in the message.
         """
         message = json.loads(message)
         for key in keys:
             value = message[key]
-            if isinstance(message, str):
-                value[key] = self.alter_string_message(value)
-            elif isinstance(message, int):
-                value[key] = self.alter_int_message(int(value))
+            if isinstance(value, str):
+                message[key] = self.alter_string_message(value)
+            elif isinstance(value, int):
+                message[key] = self.alter_int_message(value)
             else:
                 raise ValueError("Unsupported message type")
 
-    def alter_string_message(self, message):
+    def alter_string_message(self, message: str) -> str:
         """
         Alters the content of a string message before sending.
 
@@ -43,7 +44,7 @@ class MaliciousClient(Client):
 
         return altered_message
 
-    def alter_int_message(self, number):
+    def alter_int_message(self, number: int) -> int:
         """
         Alters the content of an integer message before sending.
 
@@ -59,7 +60,7 @@ class MaliciousClient(Client):
 
         return altered_number
 
-    def invert_string(self, text):
+    def invert_string(self, text: str) -> str:
         """
         Inverts the characters of a string.
 
@@ -71,7 +72,7 @@ class MaliciousClient(Client):
         """
         return text[::-1]
 
-    def replace_characters(self, text, replacements):
+    def replace_characters(self, text: str, replacements: dict) -> str:
         """
         Replaces characters in a string based on the provided replacements.
 
@@ -86,7 +87,7 @@ class MaliciousClient(Client):
             text = text.replace(old_char, new_char)
         return text
 
-    def capitalize_words(self, text):
+    def capitalize_words(self, text: str) -> str:
         """
         Capitalizes the first letter of each word in a string.
 
@@ -98,7 +99,7 @@ class MaliciousClient(Client):
         """
         return ' '.join(word.capitalize() for word in text.split())
 
-    def toggle_case(self, text):
+    def toggle_case(self, text: str) -> str:
         """
         Toggles the case of characters in a string.
 
@@ -110,9 +111,8 @@ class MaliciousClient(Client):
         """
         return ''.join(c.upper() if i % 2 == 0 else c.lower() for i, c in enumerate(text))
 
-    # Existing methods...
 
-    def reverse_digits(self, number):
+    def reverse_digits(self, number: int) -> int:
         """
         Reverses the digits of an integer.
 
@@ -124,7 +124,7 @@ class MaliciousClient(Client):
         """
         return int(str(number)[::-1])
 
-    def add_random_number(self, number):
+    def add_random_number(self, number: int) -> int:
         """
         Adds a random number to the integer.
 
@@ -137,7 +137,7 @@ class MaliciousClient(Client):
         random_addition = random.randint(1, 100)
         return number + random_addition
 
-    def multiply_by_random(self, number):
+    def multiply_by_random(self, number: int) -> int:
         """
         Multiplies the integer by a random number.
 
@@ -153,3 +153,4 @@ class MaliciousClient(Client):
 
 if __name__ == '__main__':
     client = MaliciousClient("asdasd", 12)
+

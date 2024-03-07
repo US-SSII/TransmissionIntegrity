@@ -20,7 +20,7 @@ def load_logger(is_test: bool = False) -> None:
     # Create a file name with the date
     log_file_name = f'{current_date}_error_log.txt'
     log_file_path = os.path.join(
-        '../../../../../installers/SecureStorage-HIDS-main/SecureStorage-HIDS-main/src/main/logs', log_file_name)
+        '../../../../../installers/SecureStorage-HIDS-main/SecureStorage-HIDS-main/src/main/logs', log_file_name) # TODO: Change PATH
 
     # Configure the Loguru logger
     fmt = "{time} - {level} - {message}"

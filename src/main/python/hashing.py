@@ -16,17 +16,17 @@ def select_hash_algorithm(day: int) -> str:
     return 'sha512' if day % 2 == 0 else 'sha3_384'
 
 
-
-def get_hash(json_str: str, nonce: str, date_today: datetime) -> str:
+def calculate_mac(json_str: str, nonce: str, date_today: datetime) -> str:
     """
-    Calculates the hash of a file using different algorithms and applies a Message Authentication Code (MAC).
+    Calculates the Message Authentication Code (MAC) for a JSON-formatted string using different algorithms.
 
     Args:
-        json_str (str): The name or path of the file.
-        date_today (datetime): The current date.
+        json_str (str): The JSON-formatted string.
+        nonce (str): The nonce value.
+        date_today (datetime): The current date and time.
 
     Returns:
-        str: The final hash value after applying MAC.
+        str: The calculated MAC value.
     """
     day = int(date_today.strftime('%d'))
 
@@ -46,3 +46,4 @@ def get_hash(json_str: str, nonce: str, date_today: datetime) -> str:
         calculated_mac.update((nonce + json_str + token).encode())
 
     return calculated_mac.hexdigest()
+

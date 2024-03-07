@@ -1,9 +1,7 @@
 from datetime import datetime
 
-from src.main.python.hashing import get_hash
+from src.main.python.hashing import calculate_mac
 
-
-from datetime import datetime
 
 def validate_message(message: str, nonce: str, date_today: datetime, expected_hash: str) -> bool:
     """
@@ -19,7 +17,7 @@ def validate_message(message: str, nonce: str, date_today: datetime, expected_ha
         bool: True if the message integrity is valid, False otherwise.
     """
     # Calculate the hash for the received message
-    calculated_hash = get_hash(message, nonce, date_today)
+    calculated_hash = calculate_mac(message, nonce, date_today)
 
     # Compare the calculated hash with the expected hash
     return calculated_hash == expected_hash

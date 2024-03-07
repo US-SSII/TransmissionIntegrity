@@ -1,10 +1,6 @@
-import concurrent.futures
 import json
-import os
 import socket
 import threading
-import time
-from typing import Callable
 
 import select
 
@@ -90,22 +86,17 @@ class Server:
 
     def actions(self, received_message: str) -> str:
         """
-        - Guardar el nonce
-        - Llamar a verificador integridad
-            - str ("Integrity Failed")
-        - Llamar a verificador nonce
-            - str ("Nonce repeated")
-        - Sin fallos
-            str ("OK")
-        - Mandar respuesta
+        Orchestrates a series of actions based on the received message.
 
-        Args:
-            received_message (str): The received message.
-
-        Returns:
-            str: The response message.
+        Actions:
+            1. Save the nonce.
+            2. Invoke the integrity verifier to detect tampering.
+               - Returns 'Integrity Failed' on verification failure.
+            3. Verify the uniqueness of the nonce.
+               - Returns 'Nonce repeated' if repeated.
+            4. If both integrity check and nonce validation succeed, returns 'OK'.
+            5. Sends an appropriate response to the client.
         """
-
         nonce_manager = NonceManager("../resources/nonces.json")
 
         message_dict = json.loads(received_message)
