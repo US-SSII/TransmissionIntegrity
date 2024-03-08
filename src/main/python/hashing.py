@@ -12,10 +12,14 @@ def select_hash_algorithm(day: int) -> str:
         day (int): The day of the month.
 
     Returns:
-        str: The selected hash algorithm ('sha512' or 'sha3_384').
+        str: The selected hash algorithm ('sha512', 'sha3_384' or 'sha256').
     """
-    return 'sha512' if day % 2 == 0 else 'sha3_384'
-
+    if day % 3 == 0:
+        return 'sha512'
+    elif day % 3 == 1:
+        return 'sha3_384'
+    else:
+        return 'sha256'
 
 def calculate_mac(json_str: str, nonce: str, date_today: datetime) -> str:
     """

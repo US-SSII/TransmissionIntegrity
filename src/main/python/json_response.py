@@ -1,5 +1,5 @@
+# json_response.py
 import json
-
 
 class JSONResponse:
     def __init__(self, status: str) -> None:
@@ -29,16 +29,3 @@ class JSONResponse:
         """
         return json.dumps(self.to_dict(), ensure_ascii=False)
 
-
-def create_response(server_response: str) -> str:
-    """
-    Creates a JSON response based on the server response.
-
-    Args:
-        server_response (str): The server response.
-
-    Returns:
-        str: JSON response string.
-    """
-    response = JSONResponse(server_response)
-    return response.to_json()

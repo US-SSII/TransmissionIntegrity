@@ -64,7 +64,6 @@ class Client:
                 if data == "END":
                     break  # If no data, the client has closed the connection
                 message += data
-
             return message
         except Exception:
             pass

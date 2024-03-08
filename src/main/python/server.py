@@ -1,26 +1,18 @@
-import concurrent
+# server.py
+import concurrent.futures
 import json
 import socket
 import threading
-from typing import Callable
-
+from datetime import datetime
 import select
 import schedule
-
-from src.main.python import logger
+from loguru import logger
 from src.main.python.integrity_verifier import validate_message
 from src.main.python.logger import load_logger
 from src.main.python.nonce import NonceManager
 from src.main.python.statistics import create_report
 
-
 class Server:
-    """
-    This class implements a simple TCP server that listens for incoming connections
-    and sends back a response to any message it receives. The server also tracks the
-    number of messages it has received and returns that count in its response.
-    """
-
     def __init__(self, host: str, port: int) -> None:
         """
         Initialize the server with the specified host and port.
@@ -38,20 +30,15 @@ class Server:
         Start the server listening for incoming connections.
         """
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.bind((self.host, self.port))
-        self.server_socket.listen(5)  # Increased the number of connections in the queue
+        self.server_socket.bind((self.host, int(self.port)))
+        self.server_socket.listen(5)
         load_logger()
 
-        # Execute self.repository.all_files() in the background every 10 seconds
-        schedule.every(1).days.do(lambda: self.execute_non_blocking(self.repository.all_files))
-        schedule.every(30).days.do(lambda: self.execute_non_blocking(create_report))
-
-        # Execute self.repository.all_files() in the background every 10 seconds
+        schedule.every(1).days.do(lambda: self.execute_non_blocking(create_report))
         logger.info("The server has started successfully.")
-        while True:
-            client_socket, _ = self.server_socket.accept()  # Accept incoming connection
 
-            # Handle communication with the client in a separate thread
+        while True:
+            client_socket, _ = self.server_socket.accept()
             threading.Thread(target=self.handle_client, args=(client_socket,)).start()
 
     def handle_client(self, client_socket: socket) -> None:
@@ -63,33 +50,20 @@ class Server:
         """
         try:
             while True:
-                try:
-                    active, _, _ = select.select([client_socket], [], [], 1)
+                active, _, _ = select.select([client_socket], [], [], 1)
+                if not active:
+                    continue
 
-                    if len(active) == 0:
-                        continue
+                data = client_socket.recv(1024)
+                if not data:
+                    break
 
-                    data = client_socket.recv(1024)  # Receive data from the client
-                    if not data:
-                        break  # If no data, the client has closed the connection
+                received_message = data.decode()
+                message = self.actions(received_message)
+                self.send_message_in_chunks(client_socket, message)
 
-                    received_message = data.decode()
-
-                    message = self.actions(received_message)
-
-                    chunk_size = 512
-                    for i in range(0, len(message), chunk_size):
-                        chunk = message[i:i + chunk_size]
-                        client_socket.sendall(chunk.encode("utf-8"))
-
-                    # Send the end indicator
-                    client_socket.sendall("END".encode("utf-8"))
-
-                except socket.timeout:
-                    pass  # Timeout reached, continue with the next cycle
-
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f"Error: {e}")
         finally:
             client_socket.close()
             logger.info("The server has been shut down successfully.")
@@ -98,35 +72,53 @@ class Server:
         """
         Orchestrates a series of actions based on the received message.
 
-        Actions:
-            1. Save the nonce.
-            2. Invoke the integrity verifier to detect tampering.
-               - Returns 'Integrity Failed' on verification failure.
-            3. Verify the uniqueness of the nonce.
-               - Returns 'Nonce repeated' if repeated.
-            4. If both integrity check and nonce validation succeed, returns 'OK'.
-            5. Sends an appropriate response to the client.
+        Returns:
+            str: Server response to the client.
         """
         nonce_manager = NonceManager("../resources/nonces.json")
-
         message_dict = json.loads(received_message)
+        mac = message_dict.pop("mac")
+        nonce = message_dict.pop("nonce")
+        date = datetime.strptime(message_dict.pop("date"), "%Y-%m-%d %H:%M:%S.%f")
+        json_str = json.dumps(message_dict, ensure_ascii=False)
+        message = f"{message_dict['origin_account']} - {message_dict['receiver_account']} - {message_dict['amount']}"
 
-        if validate_message(message_dict["message"], message_dict["nonce"], message_dict["date"], message_dict["mac"]):
-            if nonce_manager.not_repeated(message_dict["nonce"]):
-                logger.success("Message received successfully.")
-                message = f"Received message: {received_message}"
-            else:
-                logger.error("Replay attack detected in message: {}.".format(message_dict["message"]))
-                message = "Nonce Repeated"
-        else:
-            logger.error("Man in the middle attack detected in message: {}.".format(message_dict["message"]))
-            message = "Integrity Failed"
+        modification_attack = not validate_message(json_str, nonce, date, mac)
+        replay_attack = not nonce_manager.not_repeated(nonce)
 
+        if not modification_attack and not replay_attack:
+            logger.success(f"Message received successfully: {message}")
+            message = f"Received message: {message}"
+        elif modification_attack and replay_attack:
+            logger.error(f"Message has been modified and is a replay: {message}")
+            message = "Message has been modified and is a replay."
+        elif modification_attack:
+            logger.error(f"Message has been modified: {message}")
+            message = "Message has been modified."
+        elif replay_attack:
+            logger.error(f"Message is a replay: {message}")
+            message = "Message is a replay."
         return message
 
-    def execute_non_blocking(self, func: Callable) -> None:
+    def execute_non_blocking(self, func: callable) -> None:
         """
         Execute a function in a separate thread.
         """
         with concurrent.futures.ThreadPoolExecutor() as executor:
             executor.submit(func)
+
+    def send_message_in_chunks(self, client_socket: socket, message: str) -> None:
+        """
+        Send a message to the client in chunks.
+
+        Args:
+            client_socket (socket): The socket for the connection.
+            message (str): The message to send.
+        """
+        chunk_size = 512
+        for i in range(0, len(message), chunk_size):
+            chunk = message[i:i + chunk_size]
+            client_socket.sendall(chunk.encode("utf-8"))
+
+        client_socket.sendall("END".encode("utf-8"))
+

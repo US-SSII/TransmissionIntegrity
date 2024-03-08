@@ -1,7 +1,7 @@
-from src.main.python.cases import fine
+from src.main.python.cases import *
 
 if __name__ == '__main__':
-    fine()
+    run_aleatory(1000)
 
 
 

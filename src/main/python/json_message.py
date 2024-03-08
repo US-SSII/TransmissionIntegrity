@@ -1,9 +1,8 @@
+# json_message.py
 import json
 from datetime import datetime
-
 from src.main.python.hashing import calculate_mac
 from src.main.python.nonce import NonceManager
-
 
 class JSONMessage:
     def __init__(self, origin_account: str, receiver_account: str, amount: str) -> None:
@@ -19,6 +18,7 @@ class JSONMessage:
         self.receiver_account = receiver_account
         self.amount = amount
         self.nonce_manager = NonceManager("../resources/nonces.json")
+        self.date: datetime = None
         self.date: datetime = self.get_current_date()
         self.mac: str = None
 
@@ -35,8 +35,21 @@ class JSONMessage:
             'receiver_account': self.receiver_account,
             'amount': self.amount,
             'nonce': nonce,
-            'date': self.date,
+            'date': str(self.date),
             'mac': self.calculate_mac(nonce)
+        }
+
+    def to_micro_dict(self) -> dict:
+        """
+        Converts the JSONMessage object to a simplified dictionary.
+
+        Returns:
+            dict: The dictionary representation of the JSONMessage.
+        """
+        return {
+            'origin_account': self.origin_account,
+            'receiver_account': self.receiver_account,
+            'amount': self.amount,
         }
 
     def to_json(self) -> str:
@@ -70,17 +83,7 @@ class JSONMessage:
             str: The MAC value.
         """
         if not self.mac:
-            json_str = json.dumps(self.to_dict(), ensure_ascii=False)
+            json_str = json.dumps(self.to_micro_dict(), ensure_ascii=False)
             self.mac = calculate_mac(json_str, nonce, self.date)
         return self.mac
 
-
-def create_message() -> str:
-    """
-    Creates a JSON message with a MAC summary.
-
-    Returns:
-        str: JSON message with MAC summary.
-    """
-    message = JSONMessage(input("Source account: "), input("Receiver account: "), input("Amount: "))
-    return message.to_json()

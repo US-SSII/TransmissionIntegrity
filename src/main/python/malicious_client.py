@@ -9,7 +9,7 @@ class MaliciousClient(Client):
     The MaliciousClient class extends the Client class and overrides the send_message method to send a malicious message.
     """
 
-    def send_message(self, message: str, keys: list) -> None:
+    def send_message(self, message: str, keys: list=[]) -> None:
         """
         Sends a malicious message to the connected server.
 
@@ -26,6 +26,9 @@ class MaliciousClient(Client):
                 message[key] = self.alter_int_message(value)
             else:
                 raise ValueError("Unsupported message type")
+
+        message = json.dumps(message)
+        super().send_message(message)
 
     def alter_string_message(self, message: str) -> str:
         """
