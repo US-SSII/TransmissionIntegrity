@@ -1,13 +1,17 @@
+import concurrent
 import json
 import socket
 import threading
+from typing import Callable
 
 import select
+import schedule
 
 from src.main.python import logger
 from src.main.python.integrity_verifier import validate_message
 from src.main.python.logger import load_logger
 from src.main.python.nonce import NonceManager
+from src.main.python.statistics import create_report
 
 
 class Server:
@@ -37,6 +41,10 @@ class Server:
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen(5)  # Increased the number of connections in the queue
         load_logger()
+
+        # Execute self.repository.all_files() in the background every 10 seconds
+        schedule.every(1).days.do(lambda: self.execute_non_blocking(self.repository.all_files))
+        schedule.every(30).days.do(lambda: self.execute_non_blocking(create_report))
 
         # Execute self.repository.all_files() in the background every 10 seconds
         logger.info("The server has started successfully.")
@@ -115,3 +123,10 @@ class Server:
             message = "Integrity Failed"
 
         return message
+
+    def execute_non_blocking(self, func: Callable) -> None:
+        """
+        Execute a function in a separate thread.
+        """
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.submit(func)
