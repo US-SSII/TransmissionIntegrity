@@ -1,4 +1,5 @@
 import hashlib
+import hmac
 from configparser import ConfigParser
 from datetime import datetime
 
@@ -36,14 +37,11 @@ def calculate_mac(json_str: str, nonce: str, date_today: datetime) -> str:
     token = config.get("HASHING", "key")
 
     # Calculate the MAC using the hash and token
-    calculated_mac = hashlib.new(select_hash_algorithm(day))
+    selected_algorithms = select_hash_algorithm(day)
 
-    if day % 3 == 0:
-        calculated_mac.update((token + json_str + nonce).encode())
-    elif day % 3 == 1:
-        calculated_mac.update((json_str + token + nonce).encode())
-    else:
-        calculated_mac.update((nonce + json_str + token).encode())
+    order = [json_str, nonce] if day % 2 == 0 else [nonce, json_str]
+
+    calculated_mac = hmac.new(token.encode(), ''.join(order).encode(), digestmod=selected_algorithms)
 
     return calculated_mac.hexdigest()
 
