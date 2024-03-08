@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 def process_logs():
-    path = "../logs"
+    path = "../logs/"
     current_date = datetime.now()
     current_month = current_date.month
     current_year = current_date.year
@@ -44,11 +44,12 @@ def calculate_successful_ratio(total_messages, successful_messages):
 
 
 def create_report():
+
+    if not os.path.exists("../reports/"):
+        os.makedirs("../reports/")
+
     log_list = process_logs()
     total_messages, successful_messages = get_integrity_faults(log_list)
-
-    if not os.path.exists("../reports"):
-        os.makedirs("../reports")
 
     current_date = datetime.now()
     current_month = current_date.month
@@ -76,6 +77,4 @@ def create_report():
         report_file.write("Percentage of complete messages: {:.2%}\n\n".format(
             calculate_successful_ratio(total_messages, successful_messages)))
 
-        report_file.write("Last Daily Log:\n")
-        report_file.write("\t{}\n".format(log_list[-1].replace("../logs\\", "")))
-        report_file.write("=" * 50 + "\n\n")
+        report_file.write("=" * 50)

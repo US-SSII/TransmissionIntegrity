@@ -4,6 +4,7 @@ import json
 import socket
 import threading
 from datetime import datetime
+import time
 import select
 import schedule
 from loguru import logger
@@ -13,7 +14,7 @@ from src.main.python.nonce import NonceManager
 from src.main.python.statistics import create_report
 
 class Server:
-    def __init__(self, host: str, port: int) -> None:
+    def __init__(self, host: str, port: int, is_test: False) -> None:
         """
         Initialize the server with the specified host and port.
 
@@ -24,6 +25,7 @@ class Server:
         self.host = host
         self.port = port
         self.server_socket = None
+        self.is_test = is_test
 
     def start(self) -> None:
         """
@@ -32,9 +34,10 @@ class Server:
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind((self.host, int(self.port)))
         self.server_socket.listen(5)
-        load_logger()
+        load_logger(self.is_test)
 
-        schedule.every(1).days.do(lambda: self.execute_non_blocking(create_report))
+        threading.Thread(target=self.print_scheduler).start()
+        schedule.every(5).seconds.do(lambda: self.execute_non_blocking(create_report))
         logger.info("The server has started successfully.")
 
         while True:
@@ -106,6 +109,14 @@ class Server:
         """
         with concurrent.futures.ThreadPoolExecutor() as executor:
             executor.submit(func)
+
+    def print_scheduler(self) -> None:
+        """
+        Print "hello" every second.
+        """
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
 
     def send_message_in_chunks(self, client_socket: socket, message: str) -> None:
         """

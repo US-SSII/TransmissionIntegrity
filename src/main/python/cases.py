@@ -49,7 +49,7 @@ class Scenario:
         host = config.get("SERVER", "host")
         port = config.get("SERVER", "port")
 
-        server = Server(host, port)
+        server = Server(host, port, True)
         self.server_thread = threading.Thread(target=server.start)
         self.server_thread.start()
 
