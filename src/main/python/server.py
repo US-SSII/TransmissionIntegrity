@@ -4,6 +4,7 @@ import threading
 
 import select
 
+from src.main.python import logger
 from src.main.python.integrity_verifier import validate_message
 from src.main.python.logger import load_logger
 from src.main.python.nonce import NonceManager
@@ -38,7 +39,7 @@ class Server:
         load_logger()
 
         # Execute self.repository.all_files() in the background every 10 seconds
-
+        logger.info("The server has started successfully.")
         while True:
             client_socket, _ = self.server_socket.accept()  # Accept incoming connection
 
@@ -83,6 +84,7 @@ class Server:
             pass
         finally:
             client_socket.close()
+            logger.info("The server has been shut down successfully.")
 
     def actions(self, received_message: str) -> str:
         """
@@ -103,10 +105,13 @@ class Server:
 
         if validate_message(message_dict["message"], message_dict["nonce"], message_dict["date"], message_dict["mac"]):
             if nonce_manager.not_repeated(message_dict["nonce"]):
+                logger.success("Message received successfully.")
                 message = f"Received message: {received_message}"
             else:
+                logger.error("Replay attack detected in message: {}.".format(message_dict["message"]))
                 message = "Nonce Repeated"
         else:
+            logger.error("Man in the middle attack detected in message: {}.".format(message_dict["message"]))
             message = "Integrity Failed"
 
         return message
