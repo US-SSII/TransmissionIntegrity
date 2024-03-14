@@ -84,13 +84,6 @@ class Server:
         Returns:
             str: Server response to the client.
         """
-        print("Received message: ", received_message)
-        if received_message == "STOP SERVER":
-            logger.info("Server is shutting down.")
-            self.running = False  # Signal to stop the server
-            self.server_socket.close()
-            exit(0)
-
         nonce_manager = NonceManager("../resources/nonces.json")
         message_dict = json.loads(received_message)
         mac = message_dict.pop("mac")
@@ -145,5 +138,13 @@ class Server:
             client_socket.sendall(chunk.encode("utf-8"))
 
         client_socket.sendall("END".encode("utf-8"))
+
+    def stop(self) -> None:
+        """
+        Stop the server.
+        """
+        self.running = False
+        self.server_socket.close()
+        logger.info("The server has stopped successfully.")
 
 

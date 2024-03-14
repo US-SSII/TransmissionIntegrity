@@ -49,8 +49,8 @@ class Scenario:
         host = config.get("SERVER", "host")
         port = config.get("SERVER", "port")
 
-        server = Server(host, port, True)
-        self.server_thread = threading.Thread(target=server.start)
+        self.server = Server(host, port, True)
+        self.server_thread = threading.Thread(target=self.server.start)
         self.server_thread.start()
 
     def stop_server(self):
@@ -58,11 +58,8 @@ class Scenario:
         Stops the server thread.
         """
         # Mata el proceso del servidor
-        self.client.connect()
-        print("STOP SERVER")
-        self.client.send_message("STOP SERVER")
+        self.server.stop()
         self.server_thread.join()
-        self.client.close()
 
 
     def start_client(self):
