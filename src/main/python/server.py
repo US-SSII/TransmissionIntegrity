@@ -37,8 +37,9 @@ class Server:
         self.server_socket.listen(5)
         load_logger(self.is_test)
 
-        threading.Thread(target=self.print_scheduler).start()
-        schedule.every(5).seconds.do(lambda: self.execute_non_blocking(create_report))
+        if not self.is_test:
+            threading.Thread(target=self.print_scheduler).start()
+            schedule.every(5).seconds.do(lambda: self.execute_non_blocking(create_report))
         logger.info("The server has started successfully.")
 
         self.running = True
@@ -48,6 +49,8 @@ class Server:
                 threading.Thread(target=self.handle_client, args=(client_socket,)).start()
             except Exception:
                 break
+
+        logger.info("The server has been shut down successfully.")
 
     def handle_client(self, client_socket: socket) -> None:
         """

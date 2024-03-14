@@ -148,7 +148,7 @@ def run_aleatory(iterations: int):
         'modification_and_replay_scenario'
     ]
 
-    weights = [200, 3, 2, 1]  # Adjust weights based on desired probabilities
+    weights = [50, 3, 2, 1]  # Adjust weights based on desired probabilities
     scenario = Scenario()
 
     scenario.start_server()
@@ -161,6 +161,7 @@ def run_aleatory(iterations: int):
         scenario.stop_client()
 
     scenario.stop_server()
+
 
 
 

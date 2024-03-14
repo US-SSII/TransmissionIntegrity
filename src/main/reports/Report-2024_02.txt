@@ -1,0 +1,11 @@
+==================================================
+Monthly Report - 02/2024
+==================================================
+
+Total messages sent: 1187
+Total complete messages: 1154
+Total non-comprehensive messages: 33
+
+Percentage of complete messages: 97.22%
+
+==================================================
