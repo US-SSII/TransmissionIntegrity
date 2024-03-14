@@ -1,0 +1,11 @@
+==================================================
+Monthly Report - 99/9999
+==================================================
+
+Total messages sent: 280
+Total complete messages: 280
+Total non-comprehensive messages: 0
+
+Percentage of complete messages: 100.00%
+
+==================================================

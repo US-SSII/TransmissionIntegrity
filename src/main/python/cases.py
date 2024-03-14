@@ -7,6 +7,8 @@ from src.main.python.client import Client
 from src.main.python.create_message import random_message, create_message
 from src.main.python.malicious_client import MaliciousClient
 from src.main.python.server import Server
+from src.main.python.statistics import create_report
+
 
 class Scenario:
     """
@@ -162,8 +164,7 @@ def run_aleatory(iterations: int):
 
     scenario.stop_server()
 
-
-
+    create_report(is_test=True)
 
 
 

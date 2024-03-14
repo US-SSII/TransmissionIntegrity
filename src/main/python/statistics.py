@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 
 
-def process_logs():
+def process_logs(is_test):
     path = "../logs/"
     current_date = datetime.now()
     current_month = current_date.month
@@ -16,6 +16,10 @@ def process_logs():
     else:
         previous_month = current_month - 1
         previous_year = current_year
+
+    if is_test:
+        previous_year = 9999
+        previous_month = 99
 
     pattern = os.path.join(path, f"{previous_year:04d}-{previous_month:02d}-*.txt")
     logs_of_the_month = glob.glob(pattern)
@@ -43,12 +47,12 @@ def calculate_successful_ratio(total_messages, successful_messages):
     return successful_messages / total_messages if total_messages > 0 else 0
 
 
-def create_report():
+def create_report(is_test = False):
 
     if not os.path.exists("../reports/"):
         os.makedirs("../reports/")
 
-    log_list = process_logs()
+    log_list = process_logs(is_test)
     total_messages, successful_messages = get_integrity_faults(log_list)
 
     current_date = datetime.now()
@@ -61,6 +65,10 @@ def create_report():
     else:
         previous_month = current_month - 1
         previous_year = current_year
+
+    if is_test:
+        previous_year = 9999
+        previous_month = 99
 
     report_name = f"Report-{previous_year:04d}_{previous_month:02d}.txt"
     report_file_path = os.path.join("../reports/", report_name)
