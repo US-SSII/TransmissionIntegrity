@@ -4,7 +4,7 @@ from configparser import ConfigParser
 from typing import Optional, List
 
 from src.main.python.client import Client
-from src.main.python.create_message import random_message
+from src.main.python.create_message import random_message, create_message
 from src.main.python.malicious_client import MaliciousClient
 from src.main.python.server import Server
 
@@ -57,7 +57,13 @@ class Scenario:
         """
         Stops the server thread.
         """
+        # Mata el proceso del servidor
+        self.client.connect()
+        print("STOP SERVER")
+        self.client.send_message("STOP SERVER")
         self.server_thread.join()
+        self.client.close()
+
 
     def start_client(self):
         """
@@ -85,7 +91,6 @@ class Scenario:
         Args:
             iterations (int): Number of iterations for the scenario.
         """
-        self.creation_message = random_message
         self.client_class = Client
         self.iterations = iterations or random.randint(1, 10)
         self.modification_keys = []
@@ -113,7 +118,6 @@ class Scenario:
             iterations (int): Number of iterations for the scenario.
             replay_count (int): Number of times to replay messages.
         """
-        self.creation_message = random_message
         self.client_class = MaliciousClient
         self.iterations = iterations or random.randint(2, 10)
         self.modification_keys = []
@@ -128,7 +132,6 @@ class Scenario:
             modification_keys (Optional[List[str]]): Keys to be modified in the message.
             replay_count (int): Number of times to replay messages.
         """
-        self.creation_message = random_message
         self.client_class = MaliciousClient
         self.iterations = iterations or random.randint(2, 10)
         self.modification_keys = modification_keys or ['origin_account', 'receiver_account', 'amount']
@@ -148,7 +151,7 @@ def run_aleatory(iterations: int):
         'modification_and_replay_scenario'
     ]
 
-    weights = [100, 3, 2, 1]  # Adjust weights based on desired probabilities
+    weights = [200, 3, 2, 1]  # Adjust weights based on desired probabilities
     scenario = Scenario()
 
     scenario.start_server()

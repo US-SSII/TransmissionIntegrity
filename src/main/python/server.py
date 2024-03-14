@@ -41,8 +41,11 @@ class Server:
         logger.info("The server has started successfully.")
 
         while True:
-            client_socket, _ = self.server_socket.accept()
-            threading.Thread(target=self.handle_client, args=(client_socket,)).start()
+            try:
+                client_socket, _ = self.server_socket.accept()
+                threading.Thread(target=self.handle_client, args=(client_socket,)).start()
+            except Exception:
+                break
 
     def handle_client(self, client_socket: socket) -> None:
         """
@@ -78,6 +81,12 @@ class Server:
         Returns:
             str: Server response to the client.
         """
+        print("Received message: ", received_message)
+        if received_message == "STOP SERVER":
+            logger.info("Server is shutting down.")
+            self.server_socket.close()
+            exit(0)
+
         nonce_manager = NonceManager("../resources/nonces.json")
         message_dict = json.loads(received_message)
         mac = message_dict.pop("mac")
