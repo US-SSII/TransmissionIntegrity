@@ -37,9 +37,8 @@ class Server:
         self.server_socket.listen(5)
         load_logger(self.is_test)
 
-        if not self.is_test:
-            threading.Thread(target=self.print_scheduler).start()
-            schedule.every(5).seconds.do(lambda: self.execute_non_blocking(create_report))
+        threading.Thread(target=self.print_scheduler).start()
+        schedule.every(30).days.do(lambda: self.execute_non_blocking(create_report))
         logger.info("The server has started successfully.")
 
         self.running = True
@@ -87,6 +86,7 @@ class Server:
         Returns:
             str: Server response to the client.
         """
+
         nonce_manager = NonceManager("../resources/nonces.json")
         message_dict = json.loads(received_message)
         mac = message_dict.pop("mac")
