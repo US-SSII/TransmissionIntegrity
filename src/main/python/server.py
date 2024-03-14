@@ -1,4 +1,3 @@
-# server.py
 import concurrent.futures
 import json
 import socket
@@ -7,6 +6,7 @@ from datetime import datetime
 import time
 import select
 import schedule
+import signal
 from loguru import logger
 from src.main.python.integrity_verifier import validate_message
 from src.main.python.logger import load_logger
@@ -14,7 +14,7 @@ from src.main.python.nonce import NonceManager
 from src.main.python.statistics import create_report
 
 class Server:
-    def __init__(self, host: str, port: int, is_test: False) -> None:
+    def __init__(self, host: str, port: int, is_test: bool = False) -> None:
         """
         Initialize the server with the specified host and port.
 
@@ -26,6 +26,7 @@ class Server:
         self.port = port
         self.server_socket = None
         self.is_test = is_test
+        self.running = False
 
     def start(self) -> None:
         """
@@ -40,7 +41,8 @@ class Server:
         schedule.every(5).seconds.do(lambda: self.execute_non_blocking(create_report))
         logger.info("The server has started successfully.")
 
-        while True:
+        self.running = True
+        while self.running:
             try:
                 client_socket, _ = self.server_socket.accept()
                 threading.Thread(target=self.handle_client, args=(client_socket,)).start()
@@ -69,10 +71,11 @@ class Server:
                 self.send_message_in_chunks(client_socket, message)
 
         except Exception as e:
+            print(e.with_traceback())
             logger.error(f"Error: {e}")
         finally:
             client_socket.close()
-            logger.info("The server has been shut down successfully.")
+            logger.info("Client connection closed.")
 
     def actions(self, received_message: str) -> str:
         """
@@ -84,6 +87,7 @@ class Server:
         print("Received message: ", received_message)
         if received_message == "STOP SERVER":
             logger.info("Server is shutting down.")
+            self.running = False  # Signal to stop the server
             self.server_socket.close()
             exit(0)
 
@@ -123,7 +127,7 @@ class Server:
         """
         Print "hello" every second.
         """
-        while True:
+        while self.running:
             schedule.run_pending()
             time.sleep(1)
 
@@ -141,4 +145,5 @@ class Server:
             client_socket.sendall(chunk.encode("utf-8"))
 
         client_socket.sendall("END".encode("utf-8"))
+
 
