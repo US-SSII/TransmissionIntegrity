@@ -1,5 +1,6 @@
 import concurrent.futures
 import json
+import os
 import socket
 import threading
 from datetime import datetime
@@ -12,6 +13,8 @@ from src.main.python.integrity_verifier import validate_message
 from src.main.python.logger import load_logger
 from src.main.python.nonce import NonceManager
 from src.main.python.statistics import create_report
+
+current_directory = os.path.dirname(os.path.abspath(__file__))
 
 class Server:
     def __init__(self, host: str, port: int, is_test: bool = False) -> None:
@@ -43,6 +46,7 @@ class Server:
 
         self.running = True
         while self.running:
+            print("Waiting for a connection...")
             try:
                 client_socket, _ = self.server_socket.accept()
                 threading.Thread(target=self.handle_client, args=(client_socket,)).start()
@@ -60,6 +64,7 @@ class Server:
         """
         try:
             while True:
+                print("Waiting for a message...")
                 active, _, _ = select.select([client_socket], [], [], 1)
                 if not active:
                     continue
@@ -87,7 +92,7 @@ class Server:
             str: Server response to the client.
         """
 
-        nonce_manager = NonceManager("../resources/nonces.json")
+        nonce_manager = NonceManager(os.path.join(current_directory, "../resources/nonces.json"))
         message_dict = json.loads(received_message)
         mac = message_dict.pop("mac")
         nonce = message_dict.pop("nonce")
@@ -139,7 +144,7 @@ class Server:
         for i in range(0, len(message), chunk_size):
             chunk = message[i:i + chunk_size]
             client_socket.sendall(chunk.encode("utf-8"))
-
+        time.sleep(0.0001)
         client_socket.sendall("END".encode("utf-8"))
 
     def stop(self) -> None:
